@@ -5,6 +5,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { InputText } from 'primereact/inputtext'
 import { FilterMatchMode } from 'primereact/api'
+import { Image } from 'primereact/image'
 import useSWR from 'swr'
         
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
@@ -42,12 +43,39 @@ export default function Home () {
     setGlobalFilterValue('')
   }
 
+  const nameBodyTemplate = (data) => {
+    return <>
+    <span style={{color:"black",fontWeight:"600"}}>{data.name}</span>
+    <p style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>
+    {data.phone1 ? <>{data.phone1}<br></br></> : <></>}
+    {data.phone2 ? <>{data.phone2}<br></br></> : <></>}
+    {data.email ? <>{data.email}</> : <></>}
+    </p>
+    </>
+  }
+
+  const staffBodyTemplate = (data) => {
+    return data.staff.map(item => {return <p style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>{item}<br></br></p>})
+  }
+
+  const linkBodyTemplate = (data) => {
+    return <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{data.href}</a></>
+  }
+
+  const siteBodyTemplate = (data) => {
+    return <Image src="logo.svg" alt="portal" width="25" />
+  }
+
   return (
     <>
       <main className={styles.main}>
-        <DataTable value={data} size="small" selectionMode="single" dataKey="_id" stripedRows removableSort paginator responsiveLayout="scroll" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" currentPageReportTemplate="Строки {first} - {last} из {totalRecords}" rows={50} rowsPerPageOptions={[50,100,data.length]} filters={filters} filterDisplay="row" globalFilterFields={['name', 'city']} header={header} emptyMessage="Ничего не найдено." style={{'width': '95%'}}>
-          <Column field="name" header="Название объекта" sortable style={{'width': '70%'}}></Column>
-          <Column field="city" header="Город / Регион" sortable style={{'width': '30%'}}></Column>
+        <DataTable value={data} size="small" selectionMode="single" dataKey="_id" stripedRows removableSort paginator responsiveLayout="scroll" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" currentPageReportTemplate="Строки {first} - {last} из {totalRecords}" rows={50} rowsPerPageOptions={[50,100,data.length]} filters={filters} filterDisplay="row" globalFilterFields={['name','city','phone1','phone2','email','type']} header={header} emptyMessage="Ничего не найдено." style={{'width': '95%'}}>
+          <Column header="Объект" body={nameBodyTemplate} sortable></Column>
+          <Column field="city" header="Регион" sortable></Column>
+          <Column field="type" header="Тип" sortable></Column>
+          <Column header="Ссылка" body={linkBodyTemplate}></Column>
+          <Column header="Менеджер" body={staffBodyTemplate}></Column>
+          <Column header="Сайт" body={siteBodyTemplate}></Column>
         </DataTable>
       </main>
     </>
