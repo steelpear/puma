@@ -36,6 +36,8 @@ export default function Home () {
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Сателлит</span>
           <Image src="rocket.svg" alt="portal" width="25" />
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Классический</span>
+          <Image src="aa.svg" alt="portal" width="25" />
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Автономный</span>
           <Image src="logo.svg" alt="portal" width="25" />
           <span style={{ margin: "0 0 0 5px", fontWeight: "600" }}>Страница на портале</span>
         </div>
@@ -72,7 +74,7 @@ export default function Home () {
 
   const linkBodyTemplate = (data) => {
     if (data.site_type === "Сателлит") {return <><a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a></>}
-    if (data.site_type === "Классический") {return <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></>}
+    if (data.site_type === "Классический" || data.site_type === "Автономный") {return <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></>}
     if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`https://broniryem.ru/search?q=${data.name}`}</a></>}
     return <></>
   }
@@ -80,6 +82,7 @@ export default function Home () {
   const siteBodyTemplate = (data) => {
     if (data.site_type === "Сателлит") {return <Image src="satellite.svg" alt="portal" width="25" />}
     if (data.site_type === "Классический") {return <Image src="rocket.svg" alt="portal" width="25" />}
+    if (data.site_type === "Автономный") {return <Image src="aa.svg" alt="portal" width="25" />}
     if (data.site_type === "Нет сайта") {return <Image src="logo.svg" alt="portal" width="25" />}
     return <Image src="nothing.svg" alt="portal" width="25" />
   }
