@@ -6,9 +6,11 @@ import { Column } from 'primereact/column'
 import { InputText } from 'primereact/inputtext'
 import { FilterMatchMode } from 'primereact/api'
 import { Image } from 'primereact/image'
+import { ScrollTop } from 'primereact/scrolltop'
 import useSWR from 'swr'
         
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
+const punycode = require('punycode/')
 
 export default function Home () {
   const [filters, setFilters] = useState({'global': { value: null, matchMode: FilterMatchMode.CONTAINS }})
@@ -28,12 +30,22 @@ export default function Home () {
 
   const header = () => {
     return (
-      <div className="flex justify-content-end">
-        <span className='p-input-icon-left p-input-icon-right'>
-          <i className="pi pi-search" />
-          <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Поиск" />
-          {globalFilterValue ? <><i className="pi pi-times" onClick={clearFilter} style={{cursor: 'pointer'}} /></> : <><i className="pi pi-times" style={{color: 'lightgrey'}} /></>}
-        </span>
+      <div className="flex align-items-center justify-content-between">
+        <div className="flex">
+          <Image src="satellite.svg" alt="portal" width="25" style={{marginLeft:"10px"}}/>
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Сателлит</span>
+          <Image src="rocket.svg" alt="portal" width="25" />
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Классический</span>
+          <Image src="logo.svg" alt="portal" width="25" />
+          <span style={{ margin: "0 0 0 5px", fontWeight: "600" }}>Страница на портале</span>
+        </div>
+        <div className="flex">
+          <span className='p-input-icon-left p-input-icon-right'>
+            <i className="pi pi-search" />
+            <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Поиск" />
+            {globalFilterValue ? <><i className="pi pi-times" onClick={clearFilter} style={{ cursor: 'pointer' }} /></> : <><i className="pi pi-times" style={{ color: 'lightgrey' }} /></>}
+          </span>
+        </div>
       </div>
     )
   }
@@ -45,7 +57,7 @@ export default function Home () {
 
   const nameBodyTemplate = (data) => {
     return <>
-    <span style={{color:"black",fontWeight:"600"}}>{data.name}</span>
+    <a href={`https://broniryem.ru/admin/collections/entry/5a5dc18e670fd819bca20da7/${data._id}`} target="_blank" style={{textDecoration:"none"}}><span style={{color:"black",fontWeight:"600"}}>{data.name}</span></a>
     <p style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>
     {data.phone1 ? <>{data.phone1}<br></br></> : <></>}
     {data.phone2 ? <>{data.phone2}<br></br></> : <></>}
@@ -59,11 +71,17 @@ export default function Home () {
   }
 
   const linkBodyTemplate = (data) => {
-    return <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{data.href}</a></>
+    if (data.site_type === "Сателлит") {return <><a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a></>}
+    if (data.site_type === "Классический") {return <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></>}
+    if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`https://broniryem.ru/search?q=${data.name}`}</a></>}
+    return <></>
   }
 
   const siteBodyTemplate = (data) => {
-    return <Image src="logo.svg" alt="portal" width="25" />
+    if (data.site_type === "Сателлит") {return <Image src="satellite.svg" alt="portal" width="25" />}
+    if (data.site_type === "Классический") {return <Image src="rocket.svg" alt="portal" width="25" />}
+    if (data.site_type === "Нет сайта") {return <Image src="logo.svg" alt="portal" width="25" />}
+    return <Image src="nothing.svg" alt="portal" width="25" />
   }
 
   return (
@@ -78,6 +96,7 @@ export default function Home () {
           <Column header="Сайт" body={siteBodyTemplate}></Column>
         </DataTable>
       </main>
+      <ScrollTop className="bg-gray-500" style={{right:"5px"}} />
     </>
   )
 }
