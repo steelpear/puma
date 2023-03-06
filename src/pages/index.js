@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import styles from '@/styles/Home.module.css'
 import { Loader } from '../components/Loader'
 import { DataTable } from 'primereact/datatable'
@@ -8,16 +9,22 @@ import { FilterMatchMode } from 'primereact/api'
 import { Image } from 'primereact/image'
 import { ScrollTop } from 'primereact/scrolltop'
 import useSWR from 'swr'
+import Cookies from 'js-cookie'
         
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 const punycode = require('punycode/')
 
 export default function Home () {
+  const router = useRouter()
   const [filters, setFilters] = useState({'global': { value: null, matchMode: FilterMatchMode.CONTAINS }})
   const [globalFilterValue, setGlobalFilterValue] = useState('')
-  const { data, error, isLoading } = useSWR('http://portal/api/Puma/hotels', fetcher)
+  const { data, error, isLoading } = useSWR('https://broniryem.ru/api/Puma/hotels', fetcher)
 
-  if (error) return <div>Failed to load</div>
+  useEffect(() => {
+    if (!Cookies.get('26bc47ba0fa0ad78dbaec483ca436540')) {router.push('/auth.php')}
+  }, [])
+
+  if (error) return <div>Ошибка загрузки...</div>
   if (isLoading) {return (<Loader />)}
 
   const onGlobalFilterChange = (e) => {
@@ -69,12 +76,12 @@ export default function Home () {
   }
 
   const staffBodyTemplate = (data) => {
-    return data.staff.map(item => {return <p style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>{item}<br></br></p>})
+    return data.staff.map((item,index) => {return <p key={index} style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>{item}<br></br></p>})
   }
 
   const linkBodyTemplate = (data) => {
-    if (data.site_type === "Сателлит") {return <><a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a></>}
-    if (data.site_type === "Классический" || data.site_type === "Автономный") {return <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></>}
+    if (data.site_type === "Сателлит") {return data.sat_domain ? <><a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a></> : <></>}
+    if (data.site_type === "Классический" || data.site_type === "Автономный") {return data.href ? <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></> : <></>}
     if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`https://broniryem.ru/search?q=${data.name}`}</a></>}
     return <></>
   }
