@@ -21,7 +21,7 @@ export default function Home () {
   const { data, error, isLoading } = useSWR('https://broniryem.ru/api/Puma/hotels', fetcher)
 
   useEffect(() => {
-    if (!Cookies.get('26bc47ba0fa0ad78dbaec483ca436540')) {router.push('/auth.php')}
+    if (!Cookies.get('b46a4a041a02ad2194e24184e5034af9')) {router.push('/auth.php')}
   }, [])
 
   if (error) return <div>Ошибка загрузки...</div>
@@ -82,7 +82,7 @@ export default function Home () {
   const linkBodyTemplate = (data) => {
     if (data.site_type === "Сателлит") {return data.sat_domain ? <><a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a></> : <></>}
     if (data.site_type === "Классический" || data.site_type === "Автономный") {return data.href ? <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></> : <></>}
-    if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`https://broniryem.ru/search?q=${data.name}`}</a></>}
+    if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link.replace(/^https?:\/\//,'')}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`https://broniryem.ru/search?q=${data.name}`}</a></>}
     return <></>
   }
 

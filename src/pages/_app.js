@@ -11,6 +11,7 @@ export default function App({ Component, pageProps }) {
     <>
       <Head>
         <title>ПУМА | Список сайтов</title>
+        <link rel="shortcut icon" href="/puma/favicon.ico" />
       </Head>
       <Component {...pageProps} />
     </>
