@@ -82,7 +82,7 @@ export default function Home () {
   const linkBodyTemplate = (data) => {
     if (data.site_type === "Сателлит") {return data.sat_domain ? <><a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a></> : <></>}
     if (data.site_type === "Классический" || data.site_type === "Автономный") {return data.href ? <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></> : <></>}
-    if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link.replace(/^https?:\/\//,'')}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`https://broniryem.ru/search?q=${data.name}`}</a></>}
+    if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link.replace(/^https?:\/\//,'')}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link.replace(/^https?:\/\//,'')}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`broniryem.ru/search?q=${data.name}`}</a></>}
     return <></>
   }
 
