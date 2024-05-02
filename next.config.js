@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  basePath: '/puma',
+  reactStrictMode: false,
+  basePath: '/puma'
 }
 
 module.exports = nextConfig

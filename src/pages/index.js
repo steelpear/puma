@@ -36,9 +36,10 @@ export default function Home () {
   }
 
   const header = () => {
-    return (
-      <div className="flex align-items-center justify-content-between">
+    return <div className="flex align-items-center justify-content-between">
         <div className="flex">
+          <Image src="letter.svg" alt="portal" width="25" style={{marginLeft:"10px"}}/>
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Автосателлит</span>
           <Image src="satellite.svg" alt="portal" width="25" style={{marginLeft:"10px"}}/>
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Сателлит</span>
           <Image src="rocket.svg" alt="portal" width="25" />
@@ -46,7 +47,7 @@ export default function Home () {
           <Image src="aa.svg" alt="portal" width="25" />
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Автономный</span>
           <Image src="logo.svg" alt="portal" width="25" />
-          <span style={{ margin: "0 0 0 5px", fontWeight: "600" }}>Страница на портале</span>
+          <span style={{ margin: "0 0 0 5px", fontWeight: "600" }}>Нет сайта</span>
         </div>
         <div className="flex">
           <span className='p-input-icon-left p-input-icon-right'>
@@ -56,7 +57,6 @@ export default function Home () {
           </span>
         </div>
       </div>
-    )
   }
 
   const clearFilter = () => {
@@ -70,7 +70,7 @@ export default function Home () {
     <p style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>
     {data.phone1 ? <>{data.phone1}<br></br></> : <></>}
     {data.phone2 ? <>{data.phone2}<br></br></> : <></>}
-    {data.email ? <>{data.email}</> : <></>}
+    {/* {data.email ? <>{data.email}</> : <></>} */}
     </p>
     </>
   }
@@ -80,18 +80,19 @@ export default function Home () {
   }
 
   const linkBodyTemplate = (data) => {
-    if (data.site_type === "Сателлит") {return data.sat_domain ? <><a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a></> : <></>}
-    if (data.site_type === "Классический" || data.site_type === "Автономный") {return data.href ? <><a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a></> : <></>}
-    if (data.site_type === "Нет сайта") {return data.portal_link ? <><a href={`http://${data.portal_link.replace(/^https?:\/\//,'')}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link.replace(/^https?:\/\//,'')}</a></> : <><a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`broniryem.ru/search?q=${data.name}`}</a></>}
-    return <></>
+    if (data.site_type === "Сателлит" || data.site_type === "Автосателлит") {return data.sat_domain ? <a href={`http://${data.sat_domain}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.sat_domain)}</a> : <></>}
+    else if (data.site_type === "Классический" || data.site_type === "Автономный") {return data.href ? <a href={`http://${data.href}`} target="_blank" style={{textDecoration:"none"}}>{punycode.toUnicode(data.href)}</a> : <></>}
+    else if (data.site_type === "Нет сайта") {return data.portal_link ? <a href={`http://${data.portal_link.replace(/^https?:\/\//,'')}`} target="_blank" style={{textDecoration:"none"}}>{data.portal_link.replace(/^https?:\/\//,'')}</a> : <a href={`https://broniryem.ru/search?q=${data.name}`} target="_blank" style={{textDecoration:"none"}}>{`broniryem.ru/search?q=${data.name}`}</a>}
+    else { return <></> }
   }
 
   const siteBodyTemplate = (data) => {
-    if (data.site_type === "Сателлит") {return <Image src="satellite.svg" alt="portal" width="25" />}
-    if (data.site_type === "Классический") {return <Image src="rocket.svg" alt="portal" width="25" />}
-    if (data.site_type === "Автономный") {return <Image src="aa.svg" alt="portal" width="25" />}
-    if (data.site_type === "Нет сайта") {return <Image src="logo.svg" alt="portal" width="25" />}
-    return <Image src="nothing.svg" alt="portal" width="25" />
+    if (data.site_type === "Сателлит") {return <div style={{textAlign:'center'}}><Image src="satellite.svg" width="20" /></div>}
+    else if (data.site_type === "Классический") {return <div style={{textAlign:'center'}}><Image src="rocket.svg" width="20" /></div>}
+    else if (data.site_type === "Автономный") {return <div style={{textAlign:'center'}}><Image src="aa.svg" width="20" /></div>}
+    else if (data.site_type === "Автосателлит" || data.sat_template === "aleanus") {return <div style={{textAlign:'center'}}><Image src="letter.svg" width="20" /></div>}
+    else if (data.site_type === "Нет сайта") {return <div style={{textAlign:'center'}}><Image src="logo.svg" width="20" /></div>}
+    else {return <div style={{textAlign:'center'}}><Image src="nothing.svg" alt="portal" width="20" /></div>}
   }
 
   return (
