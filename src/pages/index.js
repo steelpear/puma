@@ -5,6 +5,7 @@ import { Loader } from '../components/Loader'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { InputText } from 'primereact/inputtext'
+import { InputSwitch } from 'primereact/inputswitch'
 import { FilterMatchMode } from 'primereact/api'
 import { Image } from 'primereact/image'
 import { ScrollTop } from 'primereact/scrolltop'
@@ -16,13 +17,20 @@ const punycode = require('punycode/')
 
 export default function Home () {
   const router = useRouter()
+  const [checked, setChecked] = useState(false)
+  const [mode, setMode] = useState('profpub')
   const [filters, setFilters] = useState({'global': { value: null, matchMode: FilterMatchMode.CONTAINS }})
   const [globalFilterValue, setGlobalFilterValue] = useState('')
-  const { data, error, isLoading } = useSWR('https://broniryem.ru/api/Puma/hotels', fetcher)
+  const { data, error, isLoading } = useSWR(['https://broniryem.ru/api/Puma/hotels?mode=' + mode], fetcher)
 
   useEffect(() => {
     if (!Cookies.get('b46a4a041a02ad2194e24184e5034af9')) {router.push('/auth.php')}
   }, [])
+
+  useEffect(() => {
+    if (checked) {setMode('all')}
+    else {setMode('profpub')}
+  }, [checked])
 
   if (error) return <div>Ошибка загрузки...</div>
   if (isLoading) {return (<Loader />)}
@@ -37,7 +45,7 @@ export default function Home () {
 
   const header = () => {
     return <div className="flex align-items-center justify-content-between">
-        <div className="flex">
+        <div className="flex align-items-center">
           <Image src="letter.svg" alt="portal" width="25" style={{marginLeft:"10px"}}/>
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Автосателлит</span>
           <Image src="satellite.svg" alt="portal" width="25" style={{marginLeft:"10px"}}/>
@@ -47,7 +55,11 @@ export default function Home () {
           <Image src="aa.svg" alt="portal" width="25" />
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Автономный</span>
           <Image src="logo.svg" alt="portal" width="25" />
-          <span style={{ margin: "0 0 0 5px", fontWeight: "600" }}>Нет сайта</span>
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Нет сайта</span>
+          <span style={{ fontWeight: "600", fontSize: 14, color:!checked?'red':'' }}>Только ПП</span>
+          <InputSwitch checked={checked} onChange={(e) => setChecked(e.value)} style={{marginInline: 5}} />
+          <span style={{ fontWeight: "600", fontSize: 14, color:checked?'red':'' }}>Все</span>
+          <span style={{fontWeight: "600", fontSize: 14, marginLeft:10}}>({data.length})</span>
         </div>
         <div className="flex">
           <span className='p-input-icon-left p-input-icon-right'>
@@ -98,7 +110,7 @@ export default function Home () {
   return (
     <>
       <main className={styles.main}>
-        <DataTable value={data} size="small" selectionMode="single" dataKey="_id" stripedRows removableSort paginator responsiveLayout="scroll" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" currentPageReportTemplate="Строки {first} - {last} из {totalRecords}" rows={50} rowsPerPageOptions={[50,100,data.length]} filters={filters} filterDisplay="row" globalFilterFields={['name','city','phone1','phone2','email','type','staff']} header={header} emptyMessage="Ничего не найдено." style={{'width': '95%'}}>
+        <DataTable value={data} size="small" selectionMode="single" dataKey="_id" stripedRows removableSort paginator responsiveLayout="scroll" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" currentPageReportTemplate="Строки {first} - {last} из {totalRecords}" rows={50} rowsPerPageOptions={[50,100,data ? data.length : 0]} filters={filters} globalFilterFields={['name','city','phone1','phone2','email','type','staff','sat_domain','href','portal_link']} header={header} emptyMessage="Данных нет." style={{'width': '95%'}}>
           <Column header="Объект" body={nameBodyTemplate} sortable></Column>
           <Column field="city" header="Регион" sortable></Column>
           <Column field="type" header="Тип" sortable></Column>
