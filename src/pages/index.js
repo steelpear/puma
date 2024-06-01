@@ -6,6 +6,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { InputText } from 'primereact/inputtext'
 import { InputSwitch } from 'primereact/inputswitch'
+import { Badge } from 'primereact/badge'
 import { FilterMatchMode } from 'primereact/api'
 import { Image } from 'primereact/image'
 import { ScrollTop } from 'primereact/scrolltop'
@@ -18,22 +19,35 @@ const punycode = require('punycode/')
 export default function Home () {
   const router = useRouter()
   const [checked, setChecked] = useState(false)
-  const [mode, setMode] = useState('profpub')
+  const [isMut, setIsMut] = useState(false)
   const [filters, setFilters] = useState({'global': { value: null, matchMode: FilterMatchMode.CONTAINS }})
   const [globalFilterValue, setGlobalFilterValue] = useState('')
-  const { data, error, isLoading } = useSWR(['https://broniryem.ru/api/Puma/hotels?mode=' + mode], fetcher)
+  const { data: hotels, error, mutate } = useSWR(['https://broniryem.ru/api/Puma/hotels'], fetcher, {revalidateOnMount: false})
 
   useEffect(() => {
     if (!Cookies.get('b46a4a041a02ad2194e24184e5034af9')) {router.push('/auth.php')}
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (checked) {setMode('all')}
-    else {setMode('profpub')}
-  }, [checked])
+    const checkState = () => {
+      if (checked) return {puma: true}
+      else return null
+    }
+    const mut = async () => {
+      setIsMut(true)
+      await mutate(fetcher('https://broniryem.ru/api/Puma/hotels', {
+        method: 'POST',
+        headers: { 'Content-type': 'application/json; charset=UTF-8' },
+        body: JSON.stringify({ filter })
+      }), {revalidate: false})
+      setIsMut(false)
+    }
+    const filter = checkState()
+    mut()
+  }, [checked]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (error) return <div>Ошибка загрузки...</div>
-  if (isLoading) {return (<Loader />)}
+  if (error) return <div>Ошибка {error.message}</div>
+  if (!hotels) {return (<Loader mutate={false} />)}
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value
@@ -46,20 +60,24 @@ export default function Home () {
   const header = () => {
     return <div className="flex align-items-center justify-content-between">
         <div className="flex align-items-center">
-          <Image src="letter.svg" alt="portal" width="25" style={{marginLeft:"10px"}}/>
-          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Автосателлит</span>
-          <Image src="satellite.svg" alt="portal" width="25" style={{marginLeft:"10px"}}/>
-          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Сателлит</span>
-          <Image src="rocket.svg" alt="portal" width="25" />
-          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Классический</span>
-          <Image src="aa.svg" alt="portal" width="25" />
-          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Автономный</span>
-          <Image src="logo.svg" alt="portal" width="25" />
-          <span style={{ margin: "0 15px 0 5px", fontWeight: "600" }}>Нет сайта</span>
-          <span style={{ fontWeight: "600", fontSize: 14, color:!checked?'red':'' }}>Только ПП</span>
-          <InputSwitch checked={checked} onChange={(e) => setChecked(e.value)} style={{marginInline: 5}} />
-          <span style={{ fontWeight: "600", fontSize: 14, color:checked?'red':'' }}>Все</span>
-          <span style={{fontWeight: "600", fontSize: 14, marginLeft:10}}>({data.length})</span>
+          <Image src="letter.svg" alt="autosatellite" width="15" style={{marginLeft:"10px"}}/>
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Автосателлит</span>
+          <Image src="satellite.svg" alt="satellite" width="15" style={{marginLeft:"10px"}}/>
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Сателлит</span>
+          <Image src="rocket.svg" alt="classic" width="15" />
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Классический</span>
+          <Image src="aa.svg" alt="autonome" width="15" />
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Автономный</span>
+          <Image src="logo.svg" alt="no site" width="15" />
+          <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Нет сайта</span>
+          <div className="flex align-items-center ml-5">
+            <span style={{ fontWeight: "600", fontSize: 13, textDecoration:!checked &&'underline' }}>Только ПП</span>
+            <div className="p-overlay-badge mx-2">
+              <InputSwitch  checked={checked} onChange={(e) => setChecked(e.value)} />
+              <Badge value={hotels.length} severity="success" style={{ fontSize: '.7rem', paddingInline: 5, height: 20, lineHeight: 1.8 }}></Badge>
+            </div>
+            <span style={{ fontWeight: "600", fontSize: 13, textDecoration:checked &&'underline' }}>Все</span>
+          </div>
         </div>
         <div className="flex">
           <span className='p-input-icon-left p-input-icon-right'>
@@ -88,7 +106,7 @@ export default function Home () {
   }
 
   const staffBodyTemplate = (data) => {
-    return data.staff.map((item,index) => {return <p key={index} style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>{item}<br></br></p>})
+    return data.staff && data.staff.length > 0 ? data.staff.map((item,index) => {return <p key={index} style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>{item}<br></br></p>}) : <i className="pi pi-minus" />
   }
 
   const linkBodyTemplate = (data) => {
@@ -99,18 +117,18 @@ export default function Home () {
   }
 
   const siteBodyTemplate = (data) => {
-    if (data.site_type === "Сателлит") {return <div style={{textAlign:'center'}}><Image src="satellite.svg" width="20" /></div>}
-    else if (data.site_type === "Классический") {return <div style={{textAlign:'center'}}><Image src="rocket.svg" width="20" /></div>}
-    else if (data.site_type === "Автономный") {return <div style={{textAlign:'center'}}><Image src="aa.svg" width="20" /></div>}
-    else if (data.site_type === "Автосателлит" || data.sat_template === "aleanus") {return <div style={{textAlign:'center'}}><Image src="letter.svg" width="20" /></div>}
-    else if (data.site_type === "Нет сайта") {return <div style={{textAlign:'center'}}><Image src="logo.svg" width="20" /></div>}
-    else {return <div style={{textAlign:'center'}}><Image src="nothing.svg" alt="portal" width="20" /></div>}
+    if (data.site_type === "Сателлит") {return <div style={{textAlign:'center'}}><Image src="satellite.svg" alt="satellite" width="20" /></div>}
+    else if (data.site_type === "Классический") {return <div style={{textAlign:'center'}}><Image src="rocket.svg" alt="classic" width="20" /></div>}
+    else if (data.site_type === "Автономный") {return <div style={{textAlign:'center'}}><Image src="aa.svg" alt="autonome" width="20" /></div>}
+    else if (data.site_type === "Автосателлит" || data.sat_template === "aleanus") {return <div style={{textAlign:'center'}}><Image src="letter.svg" alt="autosatellite" width="20" /></div>}
+    else if (data.site_type === "Нет сайта") {return <div style={{textAlign:'center'}}><Image src="logo.svg" alt="nosite" width="20" /></div>}
+    else {return <div style={{textAlign:'center'}}><Image src="nothing.svg" alt="none" width="20" /></div>}
   }
 
   return (
     <>
       <main className={styles.main}>
-        <DataTable value={data} size="small" selectionMode="single" dataKey="_id" stripedRows removableSort paginator responsiveLayout="scroll" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" currentPageReportTemplate="Строки {first} - {last} из {totalRecords}" rows={50} rowsPerPageOptions={[50,100,data ? data.length : 0]} filters={filters} globalFilterFields={['name','city','phone1','phone2','email','type','staff','sat_domain','href','portal_link']} header={header} emptyMessage="Данных нет." style={{'width': '95%'}}>
+        <DataTable value={hotels} size="small" selectionMode="single" dataKey="_id" stripedRows removableSort paginator responsiveLayout="scroll" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" currentPageReportTemplate="Строки {first} - {last} из {totalRecords}" rows={50} rowsPerPageOptions={[50,100,hotels ? hotels.length : 0]} filters={filters} globalFilterFields={['name','city','phone1','phone2','email','type','staff','sat_domain','href','portal_link']} header={header} emptyMessage="Данных нет" style={{'width': '95%'}}>
           <Column header="Объект" body={nameBodyTemplate} sortable></Column>
           <Column field="city" header="Регион" sortable></Column>
           <Column field="type" header="Тип" sortable></Column>
@@ -118,6 +136,7 @@ export default function Home () {
           <Column header="Менеджер" body={staffBodyTemplate}></Column>
           <Column header="Сайт" body={siteBodyTemplate}></Column>
         </DataTable>
+        {isMut && <Loader mutate={true} />}
       </main>
       <ScrollTop className="bg-gray-500" style={{right:"5px"}} />
     </>
