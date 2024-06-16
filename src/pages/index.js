@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import styles from '@/styles/Home.module.css'
 import { Loader } from '../components/Loader'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { InputText } from 'primereact/inputtext'
-import { InputSwitch } from 'primereact/inputswitch'
 import { Badge } from 'primereact/badge'
 import { FilterMatchMode } from 'primereact/api'
 import { Image } from 'primereact/image'
 import { ScrollTop } from 'primereact/scrolltop'
+import { OverlayPanel } from 'primereact/overlaypanel'
+import { InputMask } from "primereact/inputmask"
+import { Button } from 'primereact/button'
 import useSWR from 'swr'
 import Cookies from 'js-cookie'
         
@@ -17,34 +19,19 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json())
 const punycode = require('punycode/')
 
 export default function Home () {
+  const op = useRef(null)
   const router = useRouter()
-  const [checked, setChecked] = useState(false)
-  const [isMut, setIsMut] = useState(false)
   const [filters, setFilters] = useState({'global': { value: null, matchMode: FilterMatchMode.CONTAINS }})
   const [globalFilterValue, setGlobalFilterValue] = useState('')
-  const { data: hotels, error, mutate } = useSWR(['https://broniryem.ru/api/Puma/hotels'], fetcher, {revalidateOnMount: false})
+  const [phoneValue, setPhoneValue] = useState()
+  const [phoneData, setPhoneData] = useState()
+  const [phoneDataLoading, setPhoneDataLoading] = useState(false)
+  const { data: hotels, error } = useSWR('https://broniryem.ru/api/Puma/hotels', fetcher)
+
 
   useEffect(() => {
     if (!Cookies.get('b46a4a041a02ad2194e24184e5034af9')) {router.push('/auth.php')}
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    const checkState = () => {
-      if (checked) return {puma: true}
-      else return null
-    }
-    const mut = async () => {
-      setIsMut(true)
-      await mutate(fetcher('https://broniryem.ru/api/Puma/hotels', {
-        method: 'POST',
-        headers: { 'Content-type': 'application/json; charset=UTF-8' },
-        body: JSON.stringify({ filter })
-      }), {revalidate: false})
-      setIsMut(false)
-    }
-    const filter = checkState()
-    mut()
-  }, [checked]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) return <div>Ошибка {error.message}</div>
   if (!hotels) {return (<Loader mutate={false} />)}
@@ -55,6 +42,21 @@ export default function Home () {
     _filters['global'].value = value
     setFilters(_filters)
     setGlobalFilterValue(value)
+  }
+
+  const getPhoneInfo = async () => {
+    setPhoneDataLoading(true)
+    const reg = new RegExp(/[-()/\\ ]/g)
+    const res = await fetch(`https://broniryem.ru/api/Puma/phoneinfo?num=${phoneValue.replace(reg,'')}`)
+    const response = await res.json()
+    setPhoneData(response)
+    setPhoneDataLoading(false)
+  }
+
+  const closeOverlayPanel = (e) => {
+    op.current.toggle(e)
+    setPhoneData('')
+    setPhoneValue('')
   }
 
   const header = () => {
@@ -70,20 +72,35 @@ export default function Home () {
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Автономный</span>
           <Image src="logo.svg" alt="no site" width="15" />
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Нет сайта</span>
-          <div className="flex align-items-center ml-5">
-            <span style={{ fontWeight: "600", fontSize: 13, textDecoration:!checked &&'underline' }}>Только ПП</span>
-            <div className="p-overlay-badge mx-2">
-              <InputSwitch  checked={checked} onChange={(e) => setChecked(e.value)} />
-              <Badge value={hotels.length} severity="success" style={{ fontSize: '.7rem', paddingInline: 5, height: 20, lineHeight: 1.8 }}></Badge>
-            </div>
-            <span style={{ fontWeight: "600", fontSize: 13, textDecoration:checked &&'underline' }}>Все</span>
+          <Badge value={hotels.length} />
+          <div className="card flex justify-content-center">
+            <Button className='ml-2' icon="pi pi-mobile" rounded text severity="info" aria-label="Region" onClick={(e) => op.current.toggle(e)} />
+            <OverlayPanel ref={op} showCloseIcon style={{width:300}}>
+              <div className="flex justify-content-center">
+                <div>
+                  <label htmlFor="phone" className="font-medium text-center block mb-2">Информация о номере</label>
+                  <InputMask id="phone" value={phoneValue} onChange={(e) => setPhoneValue(e.target.value)} mask="9 (999) 999-99-99" placeholder="x (xxx) xxx-xx-xx" />
+                </div>
+              </div>
+              <div className="flex align-items-center justify-content-between mt-2">
+                <Button icon="pi pi-times" rounded text severity="danger" aria-label="Close" onClick={(e) => closeOverlayPanel(e)} tooltip="Очистить и закрыть" tooltipOptions={{ position: 'left' }} disabled={!phoneValue} />
+                <Button icon="pi pi-check" rounded text severity="info" aria-label="GetInfo" onClick={() => getPhoneInfo()} tooltip="Получить информацию" tooltipOptions={{ position: 'right' }} loading={phoneDataLoading} disabled={!phoneValue} />
+              </div>
+              {phoneData &&
+              <div>
+                <div className='mb-1'>Номер: <span className="font-medium">{phoneData.full_num}</span></div>
+                <div className='mb-1'>Оператор: <span className="font-medium">{phoneData.operator}</span></div>
+                {phoneData.old_operator && <div className='mb-1'>Прошлый оператор: <span className="font-medium">{phoneData.old_operator}</span></div>}
+                <div>Регион: <span className="font-medium">{phoneData.region}</span></div>
+              </div>}
+            </OverlayPanel>
           </div>
         </div>
         <div className="flex">
           <span className='p-input-icon-left p-input-icon-right'>
             <i className="pi pi-search" />
             <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Поиск" />
-            {globalFilterValue ? <><i className="pi pi-times" onClick={clearFilter} style={{ cursor: 'pointer' }} /></> : <><i className="pi pi-times" style={{ color: 'lightgrey' }} /></>}
+            {globalFilterValue ? <i className="pi pi-times" onClick={clearFilter} style={{ cursor: 'pointer' }} /> : <i className="pi pi-times" style={{ color: 'lightgrey' }} />}
           </span>
         </div>
       </div>
@@ -136,7 +153,6 @@ export default function Home () {
           <Column header="Менеджер" body={staffBodyTemplate}></Column>
           <Column header="Сайт" body={siteBodyTemplate}></Column>
         </DataTable>
-        {isMut && <Loader mutate={true} />}
       </main>
       <ScrollTop className="bg-gray-500" style={{right:"5px"}} />
     </>
