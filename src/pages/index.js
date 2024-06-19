@@ -6,6 +6,7 @@ import { PhoneNumberInfo } from '../components/PhoneNumberInfo'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { InputText } from 'primereact/inputtext'
+import { InputSwitch } from 'primereact/inputswitch'
 import { Badge } from 'primereact/badge'
 import { FilterMatchMode } from 'primereact/api'
 import { Image } from 'primereact/image'
@@ -18,9 +19,11 @@ const punycode = require('punycode/')
 
 export default function Home () {
   const router = useRouter()
+  const [filter, setFilter] = useState('profpub')
+  const [checked, setChecked] = useState(false)
   const [filters, setFilters] = useState({'global': { value: null, matchMode: FilterMatchMode.CONTAINS }})
   const [globalFilterValue, setGlobalFilterValue] = useState('')
-  const { data: hotels, error } = useSWR('https://broniryem.ru/api/Puma/hotels', fetcher)
+  const { data: hotels, error } = useSWR(`https://broniryem.ru/api/Puma/hotels?filter=${filter}`, fetcher)
 
   useEffect(() => {
     if (!Cookies.get('b46a4a041a02ad2194e24184e5034af9')) {router.push('/auth.php')}
@@ -37,6 +40,11 @@ export default function Home () {
     setGlobalFilterValue(value)
   }
 
+  const handleFilter = (value) => {
+    setChecked(value)
+    setFilter(!value ? 'profpub' : 'all')
+  }
+
   const header = () => {
     return <div className="flex align-items-center justify-content-between">
         <div className="flex align-items-center">
@@ -50,7 +58,14 @@ export default function Home () {
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Автономный</span>
           <Image src="logo.svg" alt="no site" width="15" />
           <span style={{ margin: "0 15px 0 5px", fontWeight: "600", fontSize: 13 }}>Нет сайта</span>
-          <Badge value={hotels.length} />
+          <div className='ml-2 flex align-items-center'>
+            <span className={!checked ? 'text-sm font-medium underline' : 'text-sm font-medium'}>ПП</span>
+            <div className='p-overlay-badge'>
+              <InputSwitch className='mx-2' checked={checked} onChange={(e) => handleFilter(e.value)} />
+              <Badge value={hotels.length} style={{marginTop: -2, marginRight: 5}} />
+            </div>
+            <span className={checked ? 'text-sm font-medium underline' : 'text-sm font-medium'}>Все</span>
+          </div>
           <PhoneNumberInfo />
         </div>
         <div className="flex">
