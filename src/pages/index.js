@@ -84,12 +84,12 @@ export default function Home () {
   }
 
   const nameBodyTemplate = (data) => {
-    return <><a href={`https://broniryem.ru/admin/collections/entry/5a5dc18e670fd819bca20da7/${data._id}`} target="_blank" style={{textDecoration:"none"}}><span style={{color:"black",fontWeight:"600"}}>{data.name}</span></a>
+    return <div><a href={`https://broniryem.ru/admin/collections/entry/5a5dc18e670fd819bca20da7/${data._id}`} target="_blank" style={{textDecoration:"none"}}><span style={{color:"black",fontWeight:500}}>{data.name}</span></a>
     <p style={{fontSize:"13px",margin:"0px",lineHeight:"15px"}}>
       {data.phone1 && <>{data.phone1}<br></br></>}
       {data.phone2 && <>{data.phone2}<br></br></>}
       {/* {data.email ? <>{data.email}</> : <></>} */}
-    </p></>
+    </p></div>
   }
 
   const staffBodyTemplate = (data) => {
@@ -116,8 +116,8 @@ export default function Home () {
     <>
       <main className={styles.main}>
         <DataTable value={hotels} size="small" selectionMode="single" dataKey="_id" stripedRows removableSort paginator responsiveLayout="scroll" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" currentPageReportTemplate="Строки {first} - {last} из {totalRecords}" rows={50} rowsPerPageOptions={[50,100,hotels ? hotels.length : 0]} filters={filters} globalFilterFields={['name','city','phone1','phone2','email','type','staff','sat_domain','href','portal_link']} header={header} emptyMessage="Данных нет" style={{'width': '95%'}}>
-          <Column header="#" headerStyle={{width: '2.5rem'}} body={(data, options) => <div className='text-sm'>{options.rowIndex + 1}</div>}></Column>
-          <Column header="Объект" body={nameBodyTemplate} sortable></Column>
+          <Column header="#" headerStyle={{width: '2.5rem'}} body={(data, options) => <div className={checked && !data.organization ? 'text-sm text-red-600' : 'text-sm'}>{options.rowIndex + 1}</div>}></Column>
+          <Column field="name" header="Объект" body={nameBodyTemplate} sortable></Column>
           <Column field="city" header="Регион" sortable></Column>
           <Column field="type" header="Тип" sortable></Column>
           <Column header="Ссылка" body={linkBodyTemplate}></Column>
